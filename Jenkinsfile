@@ -37,7 +37,6 @@ pipeline {
         stage('Model Train & Register') {
             steps {
                 echo "Training Random Forest Classifier..."
-                // Using single quotes for simple strings and double quotes only where needed
                 sh "python3 src/train.py --alias ${env.MODEL_ALIAS}"
             }
         }
@@ -59,14 +58,70 @@ pipeline {
     }
 
     post {
-        failure {
-            echo "Pipeline failed. Sending email..."
-            mail to: "${env.NOTIFICATION_EMAIL}",
-                 subject: "FAILED: ${env.PIPELINE_TYPE} - Build #${env.BUILD_NUMBER}",
-                 body: "Bhai, pipeline fail ho gayi hai. Please check Jenkins logs."
-        }
         success {
-            echo "Pipeline completed successfully!"
+            script {
+                mail to: "${env.NOTIFICATION_EMAIL}",
+                     mimeType: 'text/html',
+                     subject: "SUCCESS: ${env.PIPELINE_TYPE} Deployment - Build #${env.BUILD_NUMBER}",
+                     body: """
+                        <html>
+                        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                            <div style="max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                                <div style="background-color: #28a745; color: white; padding: 20px; text-align: center;">
+                                    <h1 style="margin: 0;">Build Successful!</h1>
+                                </div>
+                                <div style="padding: 20px;">
+                                    <p>Hello <b>Awe-mer</b>,</p>
+                                    <p>The <b>${env.PIPELINE_TYPE}</b> has completed successfully. Your MLOps workflow has finished all stages without errors.</p>
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><b>Build Number:</b></td><td style="padding: 8px; border-bottom: 1px solid #eee;">#${env.BUILD_NUMBER}</td></tr>
+                                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><b>Branch:</b></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${env.BRANCH_NAME}</td></tr>
+                                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><b>MLflow Alias:</b></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${env.MODEL_ALIAS}</td></tr>
+                                    </table>
+                                    <div style="text-align: center; margin-top: 30px;">
+                                        <a href="${env.BUILD_URL}" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Jenkins Build</a>
+                                    </div>
+                                </div>
+                                <div style="background-color: #f8f9fa; color: #777; padding: 10px; text-align: center; font-size: 12px;">
+                                    Automated MLOps Notification System | University of Lahore
+                                </div>
+                            </div>
+                        </body>
+                        </html>
+                     """
+            }
+        }
+        failure {
+            script {
+                mail to: "${env.NOTIFICATION_EMAIL}",
+                     mimeType: 'text/html',
+                     subject: "CRITICAL FAILURE: ${env.PIPELINE_TYPE} - Build #${env.BUILD_NUMBER}",
+                     body: """
+                        <html>
+                        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                            <div style="max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                                <div style="background-color: #dc3545; color: white; padding: 20px; text-align: center;">
+                                    <h1 style="margin: 0;">Pipeline Failure</h1>
+                                </div>
+                                <div style="padding: 20px;">
+                                    <p>Hello <b>Awe-mer</b>,</p>
+                                    <p style="color: #dc3545;"><b>Attention:</b> The build for <b>${env.PIPELINE_TYPE}</b> has failed. Please investigate the logs immediately to ensure system stability.</p>
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><b>Build Number:</b></td><td style="padding: 8px; border-bottom: 1px solid #eee;">#${env.BUILD_NUMBER}</td></tr>
+                                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><b>Status:</b></td><td style="padding: 8px; border-bottom: 1px solid #eee; color: #dc3545;">FAILED</td></tr>
+                                    </table>
+                                    <div style="text-align: center; margin-top: 30px;">
+                                        <a href="${env.BUILD_URL}console" style="background-color: #343a40; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Check Console Logs</a>
+                                    </div>
+                                </div>
+                                <div style="background-color: #f8f9fa; color: #777; padding: 10px; text-align: center; font-size: 12px;">
+                                    Action Required | Iris MLOps System
+                                </div>
+                            </div>
+                        </body>
+                        </html>
+                     """
+            }
         }
     }
 }
