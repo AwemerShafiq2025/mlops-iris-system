@@ -50,10 +50,19 @@ pipeline {
         }
 
         stage('Update Alias on Success') {
-            when { branch 'main' }
+            when {
+                anyOf {
+                    branch 'main'
+                    buildingTag()
+                }
+            }
             steps {
-                echo "Updating alias to Challenger-post-test"
-                sh "python3 src/update_alias.py --alias Challenger-post-test"
+                script {
+                    // Agar tag hai to 'Champion', warna 'Challenger-post-test'
+                    def finalAlias = env.TAG_NAME ? "Champion" : "Challenger-post-test"
+                    echo "Updating MLflow alias to ${finalAlias}"
+                    sh "python3 src/update_alias.py --alias ${finalAlias}"
+                }
             }
         }
     }
@@ -66,27 +75,12 @@ pipeline {
                      subject: "SUCCESS: ${env.PIPELINE_TYPE} Deployment - Build #${env.BUILD_NUMBER}",
                      body: """
                         <html>
-                        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                            <div style="max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                                <div style="background-color: #28a745; color: white; padding: 20px; text-align: center;">
-                                    <h1 style="margin: 0;">Build Successful!</h1>
-                                </div>
-                                <div style="padding: 20px; background-color: white;">
-                                    <p>Hello <b>Awe-mer</b>,</p>
-                                    <p>The <b>${env.PIPELINE_TYPE}</b> has completed successfully. Your MLOps workflow has finished all stages without errors.</p>
-                                    <table style="width: 100%; border-collapse: collapse;">
-                                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><b>Build Number:</b></td><td style="padding: 8px; border-bottom: 1px solid #eee;">#${env.BUILD_NUMBER}</td></tr>
-                                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><b>Branch:</b></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${env.BRANCH_NAME}</td></tr>
-                                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><b>MLflow Alias:</b></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${env.MODEL_ALIAS}</td></tr>
-                                    </table>
-                                    <div style="text-align: center; margin-top: 30px;">
-                                        <a href="${env.BUILD_URL}" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Jenkins Build</a>
-                                    </div>
-                                </div>
-                                <div style="background-color: #f8f9fa; color: #777; padding: 10px; text-align: center; font-size: 12px;">
-                                    Automated MLOps Notification System | University of Lahore
-                                </div>
-                            </div>
+                        <body style="font-family: Arial, sans-serif; padding: 20px;">
+                            <h2 style="color: #28a745;">Build Successful!</h2>
+                            <p>The <b>${env.PIPELINE_TYPE}</b> has finished. Model alias <b>${env.MODEL_ALIAS}</b> is set.</p>
+                            <p>View Build: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                            <br>
+                            <i>Automated MLOps Notification | University of Lahore</i>
                         </body>
                         </html>
                      """
@@ -96,29 +90,8 @@ pipeline {
             script {
                 mail to: "${env.NOTIFICATION_EMAIL}",
                      mimeType: 'text/html',
-                     subject: "CRITICAL FAILURE: ${env.PIPELINE_TYPE} - Build #${env.BUILD_NUMBER}",
-                     body: """
-                        <html>
-                        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                            <div style="max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                                <div style="background-color: #dc3545; color: white; padding: 20px; text-align: center;">
-                                    <h1 style="margin: 0;">Pipeline Failure</h1>
-                                </div>
-                                <div style="padding: 20px; background-color: white;">
-                                    <p>Hello <b>Awe-mer</b>,</p>
-                                    <p style="color: #dc3545;"><b>Attention:</b> The build for <b>${env.PIPELINE_TYPE}</b> has failed. Please investigate the logs immediately.</p>
-                                    <table style="width: 100%; border-collapse: collapse;">
-                                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><b>Build Number:</b></td><td style="padding: 8px; border-bottom: 1px solid #eee;">#${env.BUILD_NUMBER}</td></tr>
-                                        <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><b>Status:</b></td><td style="padding: 8px; border-bottom: 1px solid #eee; color: #dc3545;">FAILED</td></tr>
-                                    </table>
-                                    <div style="text-align: center; margin-top: 30px;">
-                                        <a href="${env.BUILD_URL}console" style="background-color: #343a40; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Check Console Logs</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </body>
-                        </html>
-                     """
+                     subject: "FAILURE: ${env.PIPELINE_TYPE} - Build #${env.BUILD_NUMBER}",
+                     body: "Build failed. Check logs: ${env.BUILD_URL}console"
             }
         }
     }
