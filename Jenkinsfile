@@ -4,9 +4,7 @@ pipeline {
     environment {
         MODEL_NAME = "IrisModel"
         NOTIFICATION_EMAIL = "awemershafiq1@gmail.com"
-        // Aapke Windows machine ka IP address (Check using 'ipconfig' in Windows terminal)
-        // Agar 127.0.0.1 kaam na kare to apna local IP (e.g., 192.168.x.x) use karein
-        MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
+        MLFLOW_TRACKING_URI = "http://192.168.100.17:5000"
     }
     
     stages {
@@ -40,7 +38,6 @@ pipeline {
         stage('Model Train & Register') {
             steps {
                 echo "Training Random Forest Classifier..."
-                // MLFLOW_TRACKING_URI automatically env se pick ho jaye gi agar code mein os.getenv use kiya ho
                 sh "python3 src/train.py --alias ${env.MODEL_ALIAS}"
             }
         }
@@ -74,7 +71,7 @@ pipeline {
                                 <div style="background-color: #28a745; color: white; padding: 20px; text-align: center;">
                                     <h1 style="margin: 0;">Build Successful!</h1>
                                 </div>
-                                <div style="padding: 20px;">
+                                <div style="padding: 20px; background-color: white;">
                                     <p>Hello <b>Awe-mer</b>,</p>
                                     <p>The <b>${env.PIPELINE_TYPE}</b> has completed successfully. Your MLOps workflow has finished all stages without errors.</p>
                                     <table style="width: 100%; border-collapse: collapse;">
@@ -107,9 +104,9 @@ pipeline {
                                 <div style="background-color: #dc3545; color: white; padding: 20px; text-align: center;">
                                     <h1 style="margin: 0;">Pipeline Failure</h1>
                                 </div>
-                                <div style="padding: 20px;">
+                                <div style="padding: 20px; background-color: white;">
                                     <p>Hello <b>Awe-mer</b>,</p>
-                                    <p style="color: #dc3545;"><b>Attention:</b> The build for <b>${env.PIPELINE_TYPE}</b> has failed. Please investigate the logs immediately to ensure system stability.</p>
+                                    <p style="color: #dc3545;"><b>Attention:</b> The build for <b>${env.PIPELINE_TYPE}</b> has failed. Please investigate the logs immediately.</p>
                                     <table style="width: 100%; border-collapse: collapse;">
                                         <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><b>Build Number:</b></td><td style="padding: 8px; border-bottom: 1px solid #eee;">#${env.BUILD_NUMBER}</td></tr>
                                         <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><b>Status:</b></td><td style="padding: 8px; border-bottom: 1px solid #eee; color: #dc3545;">FAILED</td></tr>
@@ -117,9 +114,6 @@ pipeline {
                                     <div style="text-align: center; margin-top: 30px;">
                                         <a href="${env.BUILD_URL}console" style="background-color: #343a40; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Check Console Logs</a>
                                     </div>
-                                </div>
-                                <div style="background-color: #f8f9fa; color: #777; padding: 10px; text-align: center; font-size: 12px;">
-                                    Action Required | Iris MLOps System
                                 </div>
                             </div>
                         </body>
