@@ -4,6 +4,9 @@ pipeline {
     environment {
         MODEL_NAME = "IrisModel"
         NOTIFICATION_EMAIL = "awemershafiq1@gmail.com"
+        // Aapke Windows machine ka IP address (Check using 'ipconfig' in Windows terminal)
+        // Agar 127.0.0.1 kaam na kare to apna local IP (e.g., 192.168.x.x) use karein
+        MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
     }
     
     stages {
@@ -37,6 +40,7 @@ pipeline {
         stage('Model Train & Register') {
             steps {
                 echo "Training Random Forest Classifier..."
+                // MLFLOW_TRACKING_URI automatically env se pick ho jaye gi agar code mein os.getenv use kiya ho
                 sh "python3 src/train.py --alias ${env.MODEL_ALIAS}"
             }
         }
