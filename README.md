@@ -55,3 +55,11 @@ git tag v1.3
 
 # Push tag to GitHub to trigger Champion promotion
 git push origin v1.3
+.
+├── src/
+│   ├── ingest.py        # Data ingestion and preprocessing
+│   ├── train.py         # Training logic and MLflow registration
+│   ├── test.py          # Automated model evaluation
+│   └── update_alias.py  # Logic for alias promotion/assignment
+├── Jenkinsfile          # Jenkins declarative pipeline definition
+└── requirements.txt     # Project dependencies
